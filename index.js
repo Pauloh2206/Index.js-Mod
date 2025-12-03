@@ -13966,8 +13966,74 @@ ${prefix}togglecmdvip premium_ia off`);
           });
         } catch (error) {
           await reply("❌ Ocorreu um erro interno. Tente novamente em alguns minutos.");
-        }
-        break;
+        }       
+       break;
+       // ATENÇÃO:
+// 1. Você precisará do módulo 'fs' (ou 'fs/promises') e 'axios'.
+// 2. O seu repositório deve ser público para que a API funcione sem autenticação simples.
+
+case 'atualizarindex':
+  try {
+    if (!fs || !axios) {
+      return reply("❌ Módulos 'fs' ou 'axios' não estão disponíveis.");
+    }
+
+    const githubFileUrl = 'https://raw.githubusercontent.com/Pauloh2206/Index.js-Mod/refs/heads/main/index.js';
+    const githubApiUrl = 'https://api.github.com/repos/Pauloh2206/Index.js-Mod/contents/index.js'; // URL da API para metadados
+    const localFilePath = 'dados/src/index.js';
+    const shaFilePath = 'dados/src/index_sha.txt'; // Onde armazenamos o SHA da última versão
+
+    await reply('⏳ Verificando status de atualização do Index.js...');
+
+    // 1. OBTÉM O SHA REMOTO (do GitHub API)
+    const apiResponse = await axios.get(githubApiUrl, {
+      timeout: 10000
+    });
+    const remoteSha = apiResponse.data.sha;
+
+    let localSha = '';
+    
+    // 2. OBTÉM O SHA LOCAL ARMAZENADO
+    try {
+      localSha = await fs.promises.readFile(shaFilePath, 'utf8');
+    } catch (readError) {
+      // Se o arquivo SHA não existir, consideramos que é a primeira vez/desatualizado
+      console.log('Arquivo SHA local não encontrado. Prosseguindo com o download.');
+    }
+
+    // 3. COMPARAÇÃO
+    if (localSha === remoteSha) {
+      return reply(`✅ O Index.js já está na versão mais recente (SHA: ${remoteSha}). Nenhuma atualização é necessária.`);
+    }
+    
+    // 4. DOWNLOAD E SOBRESCRITA (Apenas se desatualizado)
+    await reply('⚠️ Nova versão detectada! Baixando e atualizando...');
+
+    const fileResponse = await axios.get(githubFileUrl, {
+      responseType: 'text',
+      timeout: 20000
+    });
+
+    const fileContent = fileResponse.data;
+
+    // 5. SALVA O ARQUIVO .js
+    await fs.promises.writeFile(localFilePath, fileContent, 'utf8');
+
+    // 6. ATUALIZA O ARQUIVO SHA LOCAL
+    await fs.promises.writeFile(shaFilePath, remoteSha, 'utf8');
+
+    await reply(`✅ Atualização do Index via Github foi um sucesso.\nVersão atualizada para SHA: ${remoteSha}`);
+
+  } catch (e) {
+    console.error("Erro ao verificar/atualizar index.js:", e.message);
+    let errorMessage = "❌ Ocorreu um erro ao buscar ou salvar o arquivo.";
+    
+    if (e.response?.status === 404) {
+      errorMessage += "\nErro: O arquivo não foi encontrado no GitHub. Verifique a URL da API.";
+    }
+    await reply(errorMessage + " Tente novamente em alguns minutos.");
+  }
+  break;
       case 'qc': {
   try {
     let texto = q && q.trim()
