@@ -13974,18 +13974,20 @@ ${prefix}togglecmdvip premium_ia off`);
 
 case 'atualizarindex':
   try {
+    // --- VERIFICAÇÃO DE PERMISSÃO ---
+    if (!isOwner) return reply('Apenas o dono pode usar este comando.'); 
+
     if (!fs || !axios) {
       return reply("❌ Módulos 'fs' ou 'axios' não estão disponíveis.");
     }
 
     const githubFileUrl = 'https://raw.githubusercontent.com/Pauloh2206/Index.js-Mod/refs/heads/main/index.js';
-    const githubApiUrl = 'https://api.github.com/repos/Pauloh2206/Index.js-Mod/contents/index.js'; // URL da API para metadados
+    const githubApiUrl = 'https://api.github.com/repos/Pauloh2206/Index.js-Mod/contents/index.js';
     const localFilePath = 'dados/src/index.js';
-    const shaFilePath = 'dados/src/index_sha.txt'; // Onde armazenamos o SHA da última versão
+    const shaFilePath = 'dados/src/index_sha.txt';
 
     await reply('⏳ Verificando status de atualização do Index.js...');
 
-    // 1. OBTÉM O SHA REMOTO (do GitHub API)
     const apiResponse = await axios.get(githubApiUrl, {
       timeout: 10000
     });
@@ -13993,20 +13995,15 @@ case 'atualizarindex':
 
     let localSha = '';
     
-    // 2. OBTÉM O SHA LOCAL ARMAZENADO (Lê o arquivo .txt)
     try {
       localSha = await fs.promises.readFile(shaFilePath, 'utf8');
     } catch (readError) {
-      // Se o arquivo SHA não existir, localSha permanece vazio.
     }
 
-    // 3. COMPARAÇÃO
     if (localSha === remoteSha) {
-      // Retorno sem SHA
       return reply(`✅ Atualização do Index via Github: O código já está na versão mais recente.`);
     }
     
-    // 4. DOWNLOAD E SOBRESCRITA (Apenas se desatualizado)
     await reply('⚠️ Nova versão detectada! Baixando e atualizando...');
 
     const fileResponse = await axios.get(githubFileUrl, {
@@ -14016,13 +14013,10 @@ case 'atualizarindex':
 
     const fileContent = fileResponse.data;
 
-    // 5. SALVA O ARQUIVO .js (sobrescrevendo o existente)
     await fs.promises.writeFile(localFilePath, fileContent, 'utf8');
 
-    // 6. ATUALIZA O ARQUIVO SHA LOCAL (.txt é criado ou sobrescrito)
     await fs.promises.writeFile(shaFilePath, remoteSha, 'utf8');
 
-    // Retorno sem SHA
     await reply(`✅ Atualização do Index via Github foi um sucesso.\nArquivo salvo em: ${localFilePath}`);
 
   } catch (e) {
