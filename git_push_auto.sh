@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0"
+VERSION="79"
 
 NC='\033[0m'
 RED='\033[0;31m'
@@ -171,6 +171,7 @@ function get_github_pat_and_user() {
         handle_fatal_error "Falha ao obter o nome de usuário via API. PAT inválido/expirado ou timeout."
     fi
     
+    # Armazena o usuário logado dinamicamente
     GIT_USERNAME_STORE=$(echo "$user_response" | jq -r '.login')
 
     if [ -z "$GIT_USERNAME_STORE" ] || [ "$GIT_USERNAME_STORE" = "null" ]; then
@@ -358,13 +359,14 @@ if [ -z "$REMOTE_URL" ]; then
     while true; do
         echo -e "\n${CYAN}Nenhum repositório remoto configurado ('origin'). Escolha uma ação:${NC}"
         echo -e "1) ${YELLOW}Criar um Novo Repositório no GitHub${NC}"
-        echo -e "2) ${RED}Inserir URL Manualmente${NC}"
+        echo -e "2) ${BLUE}Listar e Escolher um Repositório Existente${NC}"  # NOVA OPÇÃO
+        echo -e "3) ${RED}Inserir URL Manualmente${NC}"
         
-        read -r -p "$(echo -e "${YELLOW}Opção (1 ou 2) [1]: ${NC}")" REPO_ACTION
+        read -r -p "$(echo -e "${YELLOW}Opção (1, 2 ou 3) [1]: ${NC}")" REPO_ACTION
         REPO_ACTION=${REPO_ACTION:-1}
 
         if [ "$REPO_ACTION" == "1" ]; then
-            # Captura apenas o stdout (URL) e verifica o status. As logs da função vão para stderr.
+            # Lógica para Criar Novo Repositório
             create_output=$(create_new_repo)
             create_exit_code=$?
             
@@ -372,19 +374,60 @@ if [ -z "$REMOTE_URL" ]; then
             
             if [ $create_exit_code -eq 0 ] && [ -n "$NEW_REPO_URL" ] && [ "$NEW_REPO_URL" != "null" ]; then
                 echo -e "${GREEN}✅ URL do Novo Repositório capturado com sucesso.${NC}" >&2
-                break # Sai do loop de configuração remota
+                break
             else
-                # Se create_new_repo falhou, a mensagem de erro já foi impressa.
                 echo -e "${RED}❌ Falha na criação do repositório. Tentando novamente...${NC}" >&2
             fi
         
         elif [ "$REPO_ACTION" == "2" ]; then
+            # Lógica para Listar e Escolher Repositório (NOVA LÓGICA)
+            echo -e "${BLUE}⚙️ Listando repositórios ativos do usuário ${GIT_USERNAME_STORE}...${NC}"
+            
+            # Pega a lista (gh repo list $USUARIO_LOGADO)
+            REPOS=$(gh repo list "$GIT_USERNAME_STORE" --limit 50 --json name,url | jq -r '.[] | .name + " (" + .url + ")"')
+            
+            if [ -z "$REPOS" ]; then
+                echo -e "${RED}❌ Não foram encontrados repositórios. Tente criar um novo ou inserir a URL manualmente.${NC}" >&2
+                continue
+            fi
+
+            echo -e "\n${CYAN}🔢 REPOSITÓRIOS ENCONTRADOS (Max 50):${NC}"
+            # Cria um array com apenas os nomes para o 'select'
+            REPO_NAMES=()
+            while IFS= read -r line; do
+                REPO_NAMES+=("$(echo "$line" | cut -d' ' -f1)")
+            done <<< "$REPOS"
+
+            # Adiciona uma opção de cancelamento
+            REPO_NAMES+=("CANCELAR e voltar ao menu anterior")
+
+            select SELECTED_REPO in "${REPO_NAMES[@]}"; do
+                if [ "$SELECTED_REPO" == "CANCELAR e voltar ao menu anterior" ]; then
+                    echo -e "${YELLOW}⚠️ Seleção cancelada. Voltando ao menu de ações.${NC}"
+                    break 
+                elif [ -n "$SELECTED_REPO" ]; then
+                    # Encontra a URL completa com base no nome selecionado
+                    NEW_REPO_URL=$(echo "$REPOS" | grep "^$SELECTED_REPO (" | head -n 1 | cut -d' ' -f2 | tr -d '()')
+                    echo -e "${GREEN}✅ Repositório selecionado: ${CYAN}$SELECTED_REPO${NC}" >&2
+                    echo -e "${GREEN}✅ URL capturada: ${CYAN}$NEW_REPO_URL${NC}" >&2
+                    break 2 # Sai do select E do while true
+                else
+                    echo -e "${RED}❌ Opção inválida. Tente novamente.${NC}"
+                fi
+            done
+            if [ -n "$NEW_REPO_URL" ]; then
+                break # Sai do loop de configuração remota se a URL foi definida
+            fi
+
+        elif [ "$REPO_ACTION" == "3" ]; then
+            # Lógica para Inserir URL Manualmente
             break
         else
-            echo -e "${RED}❌ Opção inválida.${NC}"
+            echo -e "${RED}❌ Opção inválida. Escolha 1, 2 ou 3.${NC}"
         fi
     done
     
+    # Esta parte é a mesma do seu código:
     if [ -z "$NEW_REPO_URL" ]; then
         echo -e "\n${CYAN}🔗 Modo de Configuração Manual Ativado.${NC}"
         while true; do
@@ -528,7 +571,7 @@ else
         fi
 
     else
-        # Tratamento de CONFLITOS REAIS (que não ocorreram no seu caso)
+        # Tratamento de CONFLITOS REAIS
         echo -e "${RED}❌ ERRO NO PULL/REBASE! O Git parou devido a CONFLITOS.${NC}"
         
         while true; do
@@ -545,7 +588,6 @@ else
                     echo -e "${GREEN}✅ Commit inicial pulado com sucesso!${NC}"
                     break
                 else
-                    # AÇÃO FATAL: Este bloco só será chamado em caso de falha real no rebase --skip
                     handle_fatal_error "ERRO CRÍTICO: O 'git rebase --skip' falhou. Ação manual é inevitável."
                 fi
             elif [ "$CONFLICT_ACTION" == "2" ]; then
