@@ -13993,17 +13993,17 @@ case 'atualizarindex':
 
     let localSha = '';
     
-    // 2. OBTÉM O SHA LOCAL ARMAZENADO
+    // 2. OBTÉM O SHA LOCAL ARMAZENADO (Lê o arquivo .txt)
     try {
       localSha = await fs.promises.readFile(shaFilePath, 'utf8');
     } catch (readError) {
-      // Se o arquivo SHA não existir, consideramos que é a primeira vez/desatualizado
-      console.log('Arquivo SHA local não encontrado. Prosseguindo com o download.');
+      // Se o arquivo SHA não existir, localSha permanece vazio.
     }
 
     // 3. COMPARAÇÃO
     if (localSha === remoteSha) {
-      return reply(`✅ O Index.js já está na versão mais recente (SHA: ${remoteSha}). Nenhuma atualização é necessária.`);
+      // Retorno sem SHA
+      return reply(`✅ Atualização do Index via Github: O código já está na versão mais recente.`);
     }
     
     // 4. DOWNLOAD E SOBRESCRITA (Apenas se desatualizado)
@@ -14016,13 +14016,14 @@ case 'atualizarindex':
 
     const fileContent = fileResponse.data;
 
-    // 5. SALVA O ARQUIVO .js
+    // 5. SALVA O ARQUIVO .js (sobrescrevendo o existente)
     await fs.promises.writeFile(localFilePath, fileContent, 'utf8');
 
-    // 6. ATUALIZA O ARQUIVO SHA LOCAL
+    // 6. ATUALIZA O ARQUIVO SHA LOCAL (.txt é criado ou sobrescrito)
     await fs.promises.writeFile(shaFilePath, remoteSha, 'utf8');
 
-    await reply(`✅ Atualização do Index via Github foi um sucesso.\nVersão atualizada para SHA: ${remoteSha}`);
+    // Retorno sem SHA
+    await reply(`✅ Atualização do Index via Github foi um sucesso.\nArquivo salvo em: ${localFilePath}`);
 
   } catch (e) {
     console.error("Erro ao verificar/atualizar index.js:", e.message);
