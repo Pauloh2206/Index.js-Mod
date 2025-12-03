@@ -14001,7 +14001,7 @@ case 'atualizarindex':
     }
 
     if (localSha === remoteSha) {
-      return reply(`✅ Atualização do Index via Github: O código já está na versão mais recente.`);
+      return reply(`*✅ Atualização do Index via Github: O código já está na versão mais recente.*`);
     }
     
     await reply('⚠️ Nova versão detectada! Baixando e atualizando...');
