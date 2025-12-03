@@ -14000,8 +14000,9 @@ case 'atualizarindex':
     } catch (readError) {
     }
 
+    // 1. COMPARAÇÃO: SE JÁ ESTIVER ATUALIZADO, RETORNA SEM REINICIAR
     if (localSha === remoteSha) {
-      return reply(`*✅ Atualização do Index via Github: O código já está na versão mais recente.*`);
+      return reply(`✅ Atualização do Index via Github: O código já está na versão mais recente.`);
     }
     
     await reply('⚠️ Nova versão detectada! Baixando e atualizando...');
@@ -14017,7 +14018,20 @@ case 'atualizarindex':
 
     await fs.promises.writeFile(shaFilePath, remoteSha, 'utf8');
 
-    await reply(`✅ Atualização do Index via Github foi um sucesso.\nArquivo salvo em: ${localFilePath}`);
+    // 2. RETORNO DE SUCESSO E AVISO DE REINÍCIO
+    await reply(`✅ Atualização do Index via Github foi um sucesso. O bot será reiniciado agora para aplicar as mudanças.`);
+
+    // 3. LÓGICA DE REINÍCIO AUTOMÁTICO (Executada APENAS se houve atualização)
+    // Se o seu comando '.reiniciar' for uma função interna do código, use-a.
+    // Caso contrário, use process.exit(0) para forçar o restart em ambientes como PM2.
+    setTimeout(() => {
+        // Exemplo: Executar o comando interno 'reiniciar'
+        // eval(`${prefix}reiniciar`); 
+        
+        // Exemplo seguro para a maioria dos ambientes Node.js:
+        process.exit(0); 
+    }, 2000);
+
 
   } catch (e) {
     console.error("Erro ao verificar/atualizar index.js:", e.message);
