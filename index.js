@@ -12060,7 +12060,7 @@ case 'ownermenu':
         }
         break;
       case 'blockuserg':
-        if (!isOwner && isSubOwner) return reply("Este comando é apenas para o meu dono");
+        if (!isOwner && !isSubOwner) return reply("Este comando é apenas para o meu dono");
         try {
           if (!menc_os2) return reply("Marque alguém 🙄");
           var reason;
@@ -12084,7 +12084,7 @@ case 'ownermenu':
         }
         break;
       case 'unblockuserg':
-        if (!isOwner && isSubOwner) return reply("Este comando é apenas para o meu dono");
+        if (!isOwner && !isSubOwner) return reply("Este comando é apenas para o meu dono");
         try {
           if (!menc_os2) return reply("Marque alguém 🙄");
           const blockFile = pathz.join(DATABASE_DIR, 'globalBlocks.json');
@@ -12109,7 +12109,7 @@ case 'ownermenu':
         }
         break;
       case 'listblocks':
-        if (!isOwner && isSubOwner) return reply("Este comando é apenas para o meu dono");
+        if (!isOwner && !isSubOwner) return reply("Este comando é apenas para o meu dono");
         try {
           const blockFile = pathz.join(DATABASE_DIR, 'globalBlocks.json');
           const blockedCommands = globalBlocks.commands ? Object.entries(globalBlocks.commands).map(([cmd, data]) => `🔧 *${cmd}* - Motivo: ${data.reason}`).join('\n') : 'Nenhum comando bloqueado.';
