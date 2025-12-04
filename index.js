@@ -1,3 +1,4 @@
+import { GoogleGenAI } from '@google/genai';
 import makeWASocket from 'whaileys';
 import {
   downloadContentFromMessage,
@@ -14042,6 +14043,64 @@ case 'atualizarindex':
     await reply(errorMessage + " Tente novamente em alguns minutos.");
   }
   break;
+  
+case 'clima':
+    try {
+        const GEMINI_API_KEY = "AIzaSyBovuXaMv2k1gWNSHMQ2iDeVNrjSg1_j7o"; 
+        
+        if (!GEMINI_API_KEY) {
+            return reply('❌ Erro: Chave da API Gemini não configurada.');
+        }
+
+        const commandName = 'clima';
+        const rawBodyWithoutPrefix = body.substring(prefix.length).trim();
+        const parts = rawBodyWithoutPrefix.split(/\s+/);
+
+        if (parts.length <= 1 || parts[0].toLowerCase() !== commandName) {
+             return reply('⚠️ Informe a cidade. Exemplo: !clima Montes Claros MG');
+        }
+        
+        const cidade = parts.slice(1).join(' ');
+        
+        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY }); 
+
+        await reply(`*⏳ Consultando o clima atual para ${cidade} via API Gemini...*`);
+
+        const prompt = `Qual é o clima atual, temperatura, sensação térmica, umidade e condição do vento em ${cidade}? Responda de forma concisa em um único parágrafo e use emojis para formatar os dados.`;
+        
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            config: {
+                tools: [{ googleSearch: {} }],
+            },
+        });
+        
+        const respostaGemini = response.text;
+
+        const resultadoFormatado = `
+╭━─━━━━━━━━━━━━━━─╮ 
+*☁️ CLIMA EM TEMPO REAL*
+📍 *Local:* ${cidade}
+╰━━━━━━━━━━━━━━━━━╯        
+
+📝 *Relatório:*
+
+${respostaGemini}
+
+----------------------------------
+_Fonte: Busca Gemini em tempo real_
+_Desenvolvida por: Paulo Hernani (Taki)_
+_Assistente: Gemini IA_
+----------------------------------`;
+
+        await reply(resultadoFormatado);
+
+    } catch (e) {
+        console.error("Erro no comando clima:", e);
+        await reply(`❌ Ocorreu um erro ao processar a solicitação de clima via Gemini. Detalhe: ${e.message}`);
+    }
+    break;
       case 'qc': {
   try {
     let texto = q && q.trim()
