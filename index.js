@@ -14046,7 +14046,7 @@ case 'atualizarindex':
   
 case 'clima':
     try {
-        const GEMINI_API_KEY = "AIzaSyBovuXaMv2k1gWNSHMQ2iDeVNrjSg1_j7o"; 
+        const GEMINI_API_KEY = "AIzaSyBzyzdaoB9c-jop9jjUCmTIZegMl1pQHO0"; 
         
         if (!GEMINI_API_KEY) {
             return reply('❌ Erro: Chave da API Gemini não configurada.');
