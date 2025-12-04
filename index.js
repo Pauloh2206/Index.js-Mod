@@ -8645,7 +8645,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
         }
         break;
       case 'addsubdono':
-        if (!isOwner) return reply("🚫 Apenas o Dono principal pode adicionar subdonos!");
+        if (!isOwner && !isSubOwner) return reply("🚫 Apenas o Dono principal pode adicionar subdonos!");
         if (isSubOwner && !isOwner) return reply("🚫 Subdonos não podem adicionar outros subdonos!");
         try {
           let targetUserId;
@@ -11750,18 +11750,22 @@ case 'ytmp3':
         break;
         
       case 'menudono':
-      case 'ownermenu':
-        try {
-          if (!isOwner) {
-            await reply("⚠️ Este menu é exclusivo para o dono do bot.");
-            return;
-          }
-          await sendMenuWithMedia('dono', menuDono);
-        } catch (error) {
-          console.error('Erro ao enviar menu do dono:', error);
-          await reply("❌ Ocorreu um erro ao carregar o menu do dono");
-        }
-        break;
+case 'ownermenu':
+  try {
+    // --- NOVA LÓGICA DE PERMISSÃO ---
+    // Acesso permitido se for o Dono (isOwner) OU se for o Sub-Dono (isSubOwner).
+    if (!isOwner && !isSubOwner) {
+      await reply("⚠️ Este menu é exclusivo para o Dono e Sub-Dono do bot.");
+      return;
+    }
+    // ---------------------------------
+    
+    await sendMenuWithMedia('dono', menuDono);
+  } catch (error) {
+    console.error('Erro ao enviar menu do dono:', error);
+    await reply("❌ Ocorreu um erro ao carregar o menu do dono");
+  }
+  break;
       case 'stickermenu':
       case 'menusticker':
       case 'menufig':
@@ -12055,7 +12059,7 @@ case 'ytmp3':
         }
         break;
       case 'blockuserg':
-        if (!isOwner) return reply("Este comando é apenas para o meu dono");
+        if (!isOwner && isSubOwner) return reply("Este comando é apenas para o meu dono");
         try {
           if (!menc_os2) return reply("Marque alguém 🙄");
           var reason;
@@ -12079,7 +12083,7 @@ case 'ytmp3':
         }
         break;
       case 'unblockuserg':
-        if (!isOwner) return reply("Este comando é apenas para o meu dono");
+        if (!isOwner && isSubOwner) return reply("Este comando é apenas para o meu dono");
         try {
           if (!menc_os2) return reply("Marque alguém 🙄");
           const blockFile = pathz.join(DATABASE_DIR, 'globalBlocks.json');
@@ -12104,7 +12108,7 @@ case 'ytmp3':
         }
         break;
       case 'listblocks':
-        if (!isOwner) return reply("Este comando é apenas para o meu dono");
+        if (!isOwner && isSubOwner) return reply("Este comando é apenas para o meu dono");
         try {
           const blockFile = pathz.join(DATABASE_DIR, 'globalBlocks.json');
           const blockedCommands = globalBlocks.commands ? Object.entries(globalBlocks.commands).map(([cmd, data]) => `🔧 *${cmd}* - Motivo: ${data.reason}`).join('\n') : 'Nenhum comando bloqueado.';
@@ -18357,20 +18361,6 @@ ${prefix}wl.add @usuario | antilink,antistatus`);
   } catch (e) {
     reply('❌ Ocorreu um erro ao processar sua solicitação.');
   };
-  break;
-  
-  case 'nuke':
-  try {
-    if (!isOwner) return reply('Apenas o dono pode usar este comando.');
-    if (!isGroup) return reply('Apenas em grupos.');
-    if (!isBotAdmin) return reply('Preciso ser admin para isso.');
-    const membersToBan = AllgroupMembers.filter(m => m !== nazu.user.id && m !== sender);
-    if (membersToBan.length === 0) return reply('Nenhum membro para banir.');
-    await nazu.groupParticipantsUpdate(from, membersToBan, 'remove');
-  } catch (e) {
-    console.error('Erro no nuke:', e);
-    await reply('Ocorreu um erro ao banir 💔');
-  }
   break;
   
   case 'infoff':
