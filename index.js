@@ -14093,8 +14093,9 @@ ${respostaGemini}
 ------------------------------------------------
 _Fonte: Busca Gemini em tempo real_
 _Desenvolvida por: Paulo Hernani (Taki)_
-_Assistente: Gemini IA_`;
-------------------------------------------------
+_Assistente: Gemini IA_
+------------------------------------------------`; // <--- O BACKTICK AGORA ESTÁ AQUI
+
         await reply(resultadoFormatado);
 
     } catch (e) {
