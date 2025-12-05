@@ -14047,6 +14047,7 @@ case 'atualizarindex':
   
 case 'clima':
     try {
+        // ⚠️ USANDO VARIÁVEL DE AMBIENTE SEGURA
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
         
         if (!GEMINI_API_KEY) {
@@ -14058,7 +14059,7 @@ case 'clima':
         const parts = rawBodyWithoutPrefix.split(/\s+/);
 
         if (parts.length <= 1 || parts[0].toLowerCase() !== commandName) {
-             return reply('⚠️ Informe a cidade. Exemplo: !clima Montes Claros MG');
+             return reply('⚠️ Informe a cidade. Exemplo: /clima Montes Claros MG');
         }
         
         const cidade = parts.slice(1).join(' ');
@@ -14101,6 +14102,62 @@ _Assistente: Gemini IA_
         console.error("Erro no comando clima:", e);
         // Mensagem de erro mais clara em caso de falha na API
         await reply(`❌ Ocorreu um erro ao processar a solicitação de clima via Gemini. Detalhe: ${e.message}. Verifique a sua chave de API.`);
+    }
+    break;
+    case 'signo':
+    try {
+        // Acesso seguro à chave (já configurada no package.json/pm2)
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
+        
+        if (!GEMINI_API_KEY) {
+            return reply('❌ Erro: Chave da API Gemini não configurada.');
+        }
+
+        const commandName = 'signo';
+        const rawBodyWithoutPrefix = body.substring(prefix.length).trim();
+        const parts = rawBodyWithoutPrefix.split(/\s+/);
+
+        if (parts.length <= 1 || parts[0].toLowerCase() !== commandName) {
+             return reply('⚠️ Informe o seu signo para a previsão. Exemplo: /signo Escorpião');
+        }
+        
+        const signo = parts.slice(1).join(' ');
+        
+        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY }); 
+
+        await reply(`*⏳ Consultando a previsão astrológica para ${signo} via Gemini...*`);
+
+        // Prompt detalhado para gerar uma resposta útil e com foco
+        const prompt = `Gere a previsão astrológica completa para o signo de ${signo} para o dia de hoje. Sua resposta deve ter três parágrafos curtos, focando em: 1) Amor/Relações; 2) Carreira/Finanças; 3) Sorte/Energia do Dia. Use emojis no início de cada parágrafo.`;
+        
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            // Não usaremos a Busca do Google, pois é uma resposta criativa
+        });
+        
+        const previsaoGemini = response.text;
+        const dataAtual = new Date().toLocaleDateString('pt-BR');
+
+        const resultadoFormatado = `
+╭━─━━━━━━━━━━━━━━─╮ 
+*✨ PREVISÃO ASTROLÓGICA*
+⭐ *Signo:* ${signo}
+🗓️ *Data:* ${dataAtual}
+╰━━━━━━━━━━━━━━━━━╯        
+
+📝 *Previsão do Dia:*
+------------------------------------------------
+${previsaoGemini}
+------------------------------------------------
+_Fonte: Gerada por Gemini IA_
+_Desenvolvida por: Paulo Hernani (Taki)_`;
+
+        await reply(resultadoFormatado);
+
+    } catch (e) {
+        console.error("Erro no comando signo:", e);
+        await reply(`❌ Ocorreu um erro ao processar a solicitação do signo via Gemini. Detalhe: ${e.message}`);
     }
     break;
       case 'qc': {
