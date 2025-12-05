@@ -14047,7 +14047,6 @@ case 'atualizarindex':
   
 case 'clima':
     try {
-        // ⚠️ USANDO VARIÁVEL DE AMBIENTE SEGURA
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
         
         if (!GEMINI_API_KEY) {
