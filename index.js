@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { GoogleGenAI } from '@google/genai';
 import makeWASocket from 'whaileys';
 import {
@@ -14046,10 +14047,11 @@ case 'atualizarindex':
   
 case 'clima':
     try {
-        const GEMINI_API_KEY = "AIzaSyBzyzdaoB9c-jop9jjUCmTIZegMl1pQHO0"; 
+        // ⚠️ USANDO VARIÁVEL DE AMBIENTE SEGURA
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
         
         if (!GEMINI_API_KEY) {
-            return reply('❌ Erro: Chave da API Gemini não configurada.');
+            return reply('❌ Erro: Chave da API Gemini não configurada. Defina-a no seu ambiente (ex: export GEMINI_API_KEY="...")');
         }
 
         const commandName = 'clima';
@@ -14086,19 +14088,19 @@ case 'clima':
 
 📝 *Relatório:*
 
-${respostaGemini}
 
-----------------------------------
+${respostaGemini}
+------------------------------------------------
 _Fonte: Busca Gemini em tempo real_
 _Desenvolvida por: Paulo Hernani (Taki)_
-_Assistente: Gemini IA_
-----------------------------------`;
-
+_Assistente: Gemini IA_`;
+------------------------------------------------
         await reply(resultadoFormatado);
 
     } catch (e) {
         console.error("Erro no comando clima:", e);
-        await reply(`❌ Ocorreu um erro ao processar a solicitação de clima via Gemini. Detalhe: ${e.message}`);
+        // Mensagem de erro mais clara em caso de falha na API
+        await reply(`❌ Ocorreu um erro ao processar a solicitação de clima via Gemini. Detalhe: ${e.message}. Verifique a sua chave de API.`);
     }
     break;
       case 'qc': {
